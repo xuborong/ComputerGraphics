@@ -1,7 +1,7 @@
 import numpy as np
 from pathlib import Path
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense, TimeDistributed
 from sklearn.model_selection import train_test_split
 from time_synchronize import synchronize
 
@@ -30,19 +30,15 @@ max_face_length = max(array.shape[0] for array in face_data)
 audio_data_padded = np.array([np.pad(item, ((0, max_audio_length - item.shape[0]), (0, 0)), 'constant') for item in audio_data])
 face_data_padded = np.array([np.pad(item, ((0, max_face_length - item.shape[0]), (0, 0)), 'constant') for item in face_data])
 
-# Reshape the target data (face_data) to match the output shape of the model
-# Assuming each facial data sample should be a flat array
-face_data_flattened = face_data_padded.reshape(face_data_padded.shape[0], -1)
-
 # Split data into train, validation, and test sets
-X_temp, X_test, y_temp, y_test = train_test_split(audio_data_padded, face_data_flattened, test_size=0.15, random_state=42)
+X_temp, X_test, y_temp, y_test = train_test_split(audio_data_padded, face_data_padded, test_size=0.15, random_state=42)
 X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.18, random_state=42)
 
 # Model architecture
 model = Sequential([
     LSTM(50, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])),
-    LSTM(50),
-    Dense(y_train.shape[1])  # Adjusted to match the flattened facial data
+    LSTM(50, return_sequences=True),
+    TimeDistributed(Dense(y_train.shape[2]))  # Apply Dense layer to each time step
 ])
 
 # Compile and train the model
@@ -52,3 +48,14 @@ model.fit(X_train, y_train, epochs=100, validation_data=(X_val, y_val))
 # Evaluate the model
 test_loss = model.evaluate(X_test, y_test)
 print(f"Test Loss: {test_loss}")
+
+# After training the model, choose a sample from the test set
+sample_index = 0  # For demonstration, we take the first sample
+sample_audio = X_test[sample_index:sample_index + 1]  # Reshape if necessary
+
+# Make a prediction
+predicted_face_data = model.predict(sample_audio)
+
+# Display the prediction
+print("Predicted Facial Parameters for the Sample:")
+print(predicted_face_data)
