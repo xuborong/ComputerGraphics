@@ -3,18 +3,14 @@ import librosa
 import librosa.feature as lf
 import numpy as np
 
+
 def synchronize(audio_file, face_file):
-    # Load audio
     y, sr = librosa.load(audio_file, sr=None)
 
-    # Load and preprocess facial data
     facial_data = pd.read_csv(face_file)
     facial_data['Time_in_Seconds'] = facial_data['Timecode'].apply(timecode_to_seconds)
     start_time_seconds = facial_data['Time_in_Seconds'].iloc[0]
     facial_data['Time_Offset'] = facial_data['Time_in_Seconds'] - start_time_seconds
-
-    # Drop non-feature columns
-    facial_data = facial_data.drop(["Timecode", "Time_in_Seconds", "BlendshapeCount"], axis=1)
 
     # Initialize audio feature array
     mfccs = []
@@ -25,15 +21,18 @@ def synchronize(audio_file, face_file):
         mfcc = extract_mfcc_for_frame(y, sr, frame_number)
         mfccs.append(mfcc)
 
+    facial_data = facial_data.drop(["Timecode", "Time_in_Seconds", "Time_Offset"], axis=1)
+
     # Convert list of MFCCs to a consistent 2D numpy array
     mfccs_array = np.vstack(mfccs)
-
     return facial_data, mfccs_array
+
 
 def timecode_to_seconds(timecode):
     hours, minutes, seconds, milli_fraction = timecode.split(':')
     milliseconds, fraction = milli_fraction.split('.')
     return int(hours) * 3600 + int(minutes) * 60 + int(seconds) + int(milliseconds) / 1000 + int(fraction) / 1000000
+
 
 def extract_mfcc_for_frame(audio, sr, frame_number, window_size=0.1, n_mfcc=13, default_n_fft=2048):
     start_time = max(frame_number - window_size / 2, 0)
@@ -53,8 +52,10 @@ def extract_mfcc_for_frame(audio, sr, frame_number, window_size=0.1, n_mfcc=13, 
     avg_mfccs = np.mean(segment_mfccs, axis=1)
     return avg_mfccs
 
-audio_path = "sneezes/sneeze_audio/sneeze_1.wav"
-face_path = "sneezes/face_parameters/sneeze_1.csv"
-face, audio = synchronize(audio_path, face_path)
-print("Facial Data Shape:", face.shape)
-print("Audio Data Shape:", audio.shape)
+
+# audio_path = "sneezes/excluded (30 fps)/sneeze_1.wav"
+# face_path = "sneezes/excluded (30 fps)/sneeze_1.csv"
+# face, audio = synchronize(audio_path, face_path)
+# print(face)
+# print("Facial Data Shape:", face.shape)
+# print("Audio Data Shape:", audio.shape)
