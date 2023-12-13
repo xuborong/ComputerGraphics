@@ -21,7 +21,7 @@ def synchronize(audio_file, face_file):
         mfcc = extract_mfcc_for_frame(y, sr, frame_number)
         mfccs.append(mfcc)
 
-    facial_data = facial_data.drop(["Timecode", "Time_in_Seconds", "Time_Offset"], axis=1)
+    facial_data = facial_data.drop(["Timecode", "Time_in_Seconds", "Time_Offset", "BlendshapeCount"], axis=1)
 
     # Convert list of MFCCs to a consistent 2D numpy array
     mfccs_array = np.vstack(mfccs)

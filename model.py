@@ -12,7 +12,7 @@ audio_directory = Path("sneezes/sneeze_audio")
 audio_paths = [str(p).replace('\\', '/') for p in audio_directory.rglob('*') if p.is_file()]
 face_paths = [str(p).replace('\\', '/') for p in face_directory.rglob('*') if p.is_file()]
 audio_data, face_data = [], []
-columns = pd.read_csv(face_paths[0]).columns
+columns = pd.read_csv(face_paths[0]).columns.drop(['BlendshapeCount'])
 
 for audio_path, face_path in zip(audio_paths, face_paths):
     face, audio = synchronize(audio_path, face_path)
@@ -48,9 +48,18 @@ print(f"Test Loss: {test_loss}")
 
 sample_index = 0
 sample_audio = X_test[sample_index:sample_index + 1]
+print(sample_audio)
 predicted_face_data = model.predict(sample_audio)[0]
+
+print(sample_audio.shape)
+print(predicted_face_data.shape)
 
 print("Predicted Facial Parameters for the Sample:")
 processed_prediction = pd.DataFrame(predicted_face_data, columns=columns[1:])
 new_prediction = add_timecode_column(processed_prediction)
 print(new_prediction)
+
+# Save the modified DataFrame to a new CSV file
+# output_path = "C:/Users/xubor/OneDrive/Desktop/output.csv"
+# new_prediction.to_csv(output_path, index=False)
+# print(f"Timecode added and saved to {output_path}")

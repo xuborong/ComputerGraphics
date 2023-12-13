@@ -24,6 +24,8 @@ def add_timecode_column(df):
         df['Timecode'] = generate_timecode(num_rows)
     else:
         df.insert(0, 'Timecode', generate_timecode(num_rows))
+    if 'BlendshapeCount' not in df.columns:
+        df.insert(1, 'BlendshapeCount', [61] * num_rows)
     return df
     # Save the modified DataFrame to a new CSV file
     # output_path = csv_path.replace('.csv', '_with_timecodes.csv')
